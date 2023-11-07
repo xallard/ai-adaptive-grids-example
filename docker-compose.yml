@@ -1,0 +1,71 @@
+version: "3.8"
+
+services:
+  main-app:
+    build: ./apps/main-app
+    container_name: aiadaptivegrids_main_app
+    ports:
+      - "8000:8000"
+    environment:
+      - RESOURCE_MANAGER_URL=http://resource-manager:5000
+      - LOAD_BALANCER_URL=http://load-balancer:5001
+      - FAULT_DETECTOR_URL=http://fault-detector:5002
+    depends_on:
+      - resource-manager
+      - load-balancer
+      - fault-detector
+    networks:
+      - aiadaptivegrids_network
+
+  resource-manager:
+    build: ./apps/resource-manager
+    container_name: aiadaptivegrids_resource_manager
+    ports:
+      - "5000:5000"
+    networks:
+      - aiadaptivegrids_network
+
+  load-balancer:
+    build: ./apps/load-balancer
+    container_name: aiadaptivegrids_load_balancer
+    ports:
+      - "5001:5001"
+    networks:
+      - aiadaptivegrids_network
+
+  fault-detector:
+    build: ./apps/fault-detector
+    container_name: aiadaptivegrids_fault_detector
+    ports:
+      - "5002:5002"
+    networks:
+      - aiadaptivegrids_network
+
+  db:
+    image: postgres:latest
+    container_name: aiadaptivegrids_db
+    ports:
+      - "5432:5432"
+    environment:
+      - POSTGRES_DB=aiadaptivegridsdb
+      - POSTGRES_USER=admin
+      - POSTGRES_PASSWORD=secret
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    networks:
+      - aiadaptivegrids_network
+
+  redis:
+    image: redis:latest
+    container_name: aiadaptivegrids_redis
+    ports:
+      - "6379:6379"
+    networks:
+      - aiadaptivegrids_network
+
+networks:
+  aiadaptivegrids_network:
+    driver: bridge
+
+volumes:
+  pgdata:
